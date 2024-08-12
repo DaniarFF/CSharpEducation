@@ -1,67 +1,96 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.Configuration;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace PhoneBook
 {
     public class PhoneBookRepository
     {
-        public async Task<AbonentList> GetAllAbonents(string path) 
+        readonly string _filePath;
+
+        JsonSerializerOptions options = new JsonSerializerOptions
         {
-            using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate))
-            {
-               return await JsonSerializer.DeserializeAsync<AbonentList>(fs);
-            }
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        };
+
+        public PhoneBookRepository(string path)
+        {
+            _filePath = path;
         }
 
-        public async Task CreateNewAbonent(string name, long number, string path, AbonentList abonentList) 
+        public async Task<Abonents> GetAll()
         {
-            Abonent newAbonent = new Abonent() 
-            { 
+            using FileStream fs = new FileStream(_filePath, FileMode.OpenOrCreate);
+            Abonents abonents = await JsonSerializer.DeserializeAsync<Abonents>(fs, options);
+            return abonents;
+        }
+
+        public async Task AddNew(string name, string number)
+        {
+            Abonents abonents = await GetAll(); 
+            
+            name = FirstLetterToUpperCase(name);
+
+            Abonent newAbonent = new Abonent()
+            {
                 Name = name,
                 PhoneNumber = number,
             };
 
-            if(FindAbonent(name, path, abonentList).Result == null) 
-            {
-                abonentList.Abonent.Add(newAbonent);
+            if (await FindWithName(name) == null)
+            {    
+                abonents.Abonent.Add(newAbonent);
             }
-            else 
+            else
             {
-                Console.WriteLine("Абонент уже существует");
-                return;
+                throw new Exception("Абонент уже существует");
             }
 
-            using (FileStream fs = new FileStream(path, FileMode.Create))
-            {               
-                await JsonSerializer.SerializeAsync<AbonentList>(fs, abonentList);
-                Console.WriteLine($"Абонент {name} добавлен");
-            }
+            using FileStream fs = new FileStream(_filePath, FileMode.Create);
+            await JsonSerializer.SerializeAsync<Abonents>(fs, abonents, options);
         }
 
-        public async Task DeleteAbonent(string name, string path, AbonentList abonentList)
+        public async Task Delete(string name)
         {
-            var itemToDelete = abonentList.Abonent.FirstOrDefault(s => s.Name == name);
-            abonentList.Abonent.Remove(itemToDelete);
-
-            using (FileStream fs = new FileStream(path, FileMode.Create))
+            try 
             {
-                await JsonSerializer.SerializeAsync<AbonentList>(fs, abonentList);
-                Console.WriteLine($"Абонент {name} Удален");
+                Abonents abonents = await GetAll();
+
+                name = FirstLetterToUpperCase(name);
+
+                var itemToDelete = abonents.Abonent.FirstOrDefault(s => s.Name == name);
+                if (itemToDelete != null) 
+                {
+                    throw new Exception("Ошибка удаления, абонента не существует");
+                }
+                abonents.Abonent.Remove(itemToDelete);
+
+                using FileStream fs = new FileStream(_filePath, FileMode.Create);
+                await JsonSerializer.SerializeAsync<Abonents>(fs, abonents, options);
             }
+            catch (Exception ex) 
+            {
+                throw new Exception("Ошибка удаления");
+            }           
         }
 
-        public async Task<Abonent> FindAbonent(string name, string path, AbonentList abonentList)
+        public async Task<Abonent> FindWithName(string name)
         {
-            return abonentList.Abonent.FirstOrDefault(s => s.Name == name);
+            name = FirstLetterToUpperCase(name);
+
+            Abonents abonents = await GetAll();
+            return abonents.Abonent.FirstOrDefault(s => s.Name == name);
         }
-        public async Task<Abonent> FindAbonent(long number, string path, AbonentList abonentList)
+
+        public async Task<Abonent> FindWithNumber(string number)
         {
-            return abonentList.Abonent.FirstOrDefault(s => s.PhoneNumber == number);
+            Abonents abonents = await GetAll();
+            return abonents.Abonent.FirstOrDefault(s => s.PhoneNumber == number);
+        }
+
+        public string FirstLetterToUpperCase(string str)
+        {
+            return str.Substring(0, 1).ToUpper() + str.Substring(1);
         }
     }
 }
