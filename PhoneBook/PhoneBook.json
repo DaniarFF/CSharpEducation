@@ -1,36 +1,30 @@
-{
-  "abonent": [
-    {
-      "name": "sdsd",
-      "phoneNumber": "12313213"
-    },
-    {
-      "name": "Joon",
-      "phoneNumber": "12312323"
-    },
-    {
-      "name": "KK",
-      "phoneNumber": "1123213"
-    },
-    {
-      "name": "sasdasd",
-      "phoneNumber": "12312323"
-    },
-    {
-      "name": "qweqwe",
-      "phoneNumber": "3123213"
-    },
-    {
-      "name": "asdasd",
-      "phoneNumber": "123123"
-    },
-    {
-      "name": "dam",
-      "phoneNumber": "\u002B77799999999"
-    },
-    {
-      "name": "Dan",
-      "phoneNumber": "\u002B79999999999"
-    }
-  ]
-}
+[
+  {
+    "name": "sdsd",
+    "phoneNumber": "12313213"
+  },
+  {
+    "name": "KK",
+    "phoneNumber": "1123213"
+  },
+  {
+    "name": "sasdasd",
+    "phoneNumber": "12312323"
+  },
+  {
+    "name": "qweqwe",
+    "phoneNumber": "3123213"
+  },
+  {
+    "name": "asdasd",
+    "phoneNumber": "123123"
+  },
+  {
+    "name": "dam",
+    "phoneNumber": "\u002B77799999999"
+  },
+  {
+    "name": "Dan",
+    "phoneNumber": "\u002B79999999999"
+  }
+]
