@@ -9,10 +9,5 @@
     /// Путь к хранению данных телефонной книги
     /// </summary>
     public string RepositoryPath { get; set; }
-
-    public ApplicationSettings(string repositoryPath)
-    {
-      RepositoryPath = repositoryPath;
-    }
   }
 }

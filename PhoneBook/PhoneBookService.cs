@@ -1,7 +1,10 @@
 ﻿using System.Text.RegularExpressions;
+using System.Xml.Linq;
+using PhoneBook.Exceptions;
 using PhoneBook.Interfaces;
 using PhoneBook.Models;
 using PhoneBook.Settings;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PhoneBook
 {
@@ -12,54 +15,71 @@ namespace PhoneBook
   {
     #region Поля и свойства
 
-    private string filePath;
     private IPhoneBookRepository phoneBookRepository;
 
     #endregion
 
     #region Методы
-    public async Task<List<Abonent>> GetAllAbonents()
+    public IEnumerable<Contact> GetAllContacts()
     {
-      return await phoneBookRepository.GetAll();
+      return phoneBookRepository.GetAll();
     }
 
-    public async Task<bool> AddNewAbonent(string name, string number)
+    public async Task<Contact> AddNewContact(string name, string number)
     {
       Regex regex = new Regex(@"^\+7\d{10}$");
+
+      List<Contact> contacts = (phoneBookRepository.GetAll()).ToList();
+
+      foreach (var contact in contacts)
+      {
+        if (contact.PhoneNumber == number)
+        {
+          return contact;
+        }
+      }
+
+      Contact contactToAdd = new Contact()
+      {
+        Name = name,
+        PhoneNumber = number
+      };
 
       if (regex.IsMatch(number))
       {
-        await phoneBookRepository.Add(name, number);
-        return true;
+        await phoneBookRepository.Add(contactToAdd);
+        return default;
       }
       else
       {
-        throw new Exception("Неправильный формат телефона, должен быть в формате +79998887766");
+        throw new InvalidPhoneNumberFormatException("Неправильный формат телефона, должен быть в формате +79998887766");
       }
     }
 
-    public async Task<bool> DeleteAbonent(string name)
+    public async Task DeleteContact(string number)
     {
-      await phoneBookRepository.Delete(name);
-      return true;
+      List<Contact> contacts = (phoneBookRepository.GetAll()).ToList();
+      Contact contactToDelete = contacts.FirstOrDefault(p => p.PhoneNumber == number);
+      if (contactToDelete == null) 
+      { 
+        throw new ContactDoesntExistException("Контакта с таким номером не существует");
+      }   
+      await phoneBookRepository.Delete(contactToDelete);
     }
 
-    public async Task<Abonent> FindAbonent(string searchString)
+    public IEnumerable<Contact> FindContact(string searchString)
     {
       Regex regex = new Regex(@"^\+7\d{10}$");
 
       if (regex.IsMatch(searchString))
       {
-        return await phoneBookRepository.FindByNumber(searchString);
-      }
-
-      if (regex.IsMatch(searchString))
-      {
-        return await phoneBookRepository.FindByNumber(searchString);
+        List<Contact> contacts = phoneBookRepository.GetAll().ToList();
+        return contacts.FindAll(s => s.PhoneNumber == searchString).ToList();
       }
       else
       {
-        return await phoneBookRepository.FindByName(searchString);
+        List<Contact> contacts = phoneBookRepository.GetAll().ToList();
+        return contacts.FindAll(s => s.Name.ToUpper() == searchString.ToUpper());
       }
     }
     #endregion
@@ -69,7 +89,6 @@ namespace PhoneBook
     public PhoneBookService(ApplicationSettings applicationSettings, IPhoneBookRepository repository)
     {
       phoneBookRepository = repository;
-      filePath = applicationSettings.RepositoryPath;
     }
 
     #endregion

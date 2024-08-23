@@ -1,9 +1,10 @@
-﻿using PhoneBook.Interfaces;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using PhoneBook.Exceptions;
+using PhoneBook.Interfaces;
 using PhoneBook.Models;
 using PhoneBook.Settings;
-using System.ComponentModel.Design;
-using System.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using System.Xml.Linq;
 
 namespace PhoneBook
 {
@@ -11,9 +12,12 @@ namespace PhoneBook
   {
     static async Task Main(string[] args)
     {
+      var cfg = new ConfigurationBuilder().AddJsonFile("config.json").Build();
+      var settings = cfg.GetSection("App").Get<ApplicationSettings>();
+
       IServiceCollection services = new ServiceCollection();
 
-      services.AddSingleton(new ApplicationSettings(ConfigurationManager.AppSettings["path"]));
+      services.AddSingleton(settings);
       services.AddTransient<IPhoneBookRepository, PhoneBookRepository>();
       services.AddTransient<IPhoneBookService, PhoneBookService>();
 
@@ -48,23 +52,23 @@ namespace PhoneBook
       }
     }
 
-    static async Task GetAllAbonents(IPhoneBookService phoneBookService)
+    private static async Task GetAllAbonents(IPhoneBookService phoneBookService)
     {
       try
       {
-        List<Abonent> list = await phoneBookService.GetAllAbonents();
+        var list = phoneBookService.GetAllContacts().ToList();
         foreach (var item in list)
         {
           Console.WriteLine($"Имя: {item.Name} Телефон: {item.PhoneNumber}");
         }
       }
-      catch (Exception ex)
+      catch (Exception)
       {
-        Console.WriteLine(ex.Message);
+        Console.WriteLine("Ошибка получения абонентов");
       }
     }
 
-    static async Task AddNew(IPhoneBookService phoneBookService)
+    private static async Task AddNew(IPhoneBookService phoneBookService)
     {
       try
       {
@@ -73,46 +77,66 @@ namespace PhoneBook
         Console.WriteLine("Напиши телефон: ");
         string number = Console.ReadLine();
 
-        bool isAbonentAdded = await phoneBookService.AddNewAbonent(name, number);
-        if (isAbonentAdded)
+        var existingContact = await phoneBookService.AddNewContact(name, number);
+
+        if (existingContact == null)
         {
           Console.WriteLine($"Абонент {name} добавлен");
         }
-      }
-      catch (Exception ex)
-      {
-        Console.WriteLine("Ошибка добавления");
-      }
-    }
-
-    static async Task DeleteAbonent(IPhoneBookService phoneBookService)
-    {
-      try
-      {
-        Console.WriteLine("Напиши имя: ");
-        string name = Console.ReadLine();
-
-        bool isAbonentDeleted = await phoneBookService.DeleteAbonent(name);
-        if (isAbonentDeleted)
+        else 
         {
-          Console.WriteLine($"Абонент {name} удален");
+          Console.WriteLine($"Контакт уже существует:\nИмя: {existingContact.Name} Телефон: {existingContact.PhoneNumber}");
         }
       }
       catch (Exception ex)
       {
-        Console.WriteLine("Ошибка удаления");
+        if (ex is ContactAlreadyExistsException or InvalidPhoneNumberFormatException)
+        {
+          Console.WriteLine(ex.Message);
+        }
+        else 
+        {
+          Console.WriteLine("Ошибка добавления");
+        }         
       }
     }
 
-    static async Task FindAbonent(IPhoneBookService phoneBookService)
+    private static async Task DeleteAbonent(IPhoneBookService phoneBookService)
+    {
+      Console.WriteLine("Напиши телефон: ");
+      string number = Console.ReadLine();
+
+      try
+      {
+        await phoneBookService.DeleteContact(number); 
+      }
+      catch (Exception)
+      {
+        Console.WriteLine("Ошибка удаления");
+        return;
+      }
+
+      Console.WriteLine($"Абонент с телефоном {number} удален");
+    }
+
+    private static async Task FindAbonent(IPhoneBookService phoneBookService)
     {
       Console.WriteLine("Напиши имя или телефон");
       string name = Console.ReadLine();
 
-      Abonent abonent = await phoneBookService.FindAbonent(name);
-      if (abonent != null)
+      var contacts = phoneBookService.FindContact(name).ToList();
+      if(contacts.Count() == 1) 
       {
-        Console.WriteLine($"Имя: {abonent.Name} Телефон: {abonent.PhoneNumber}");
+        Console.WriteLine($"Имя: {contacts[0].Name} Телефон: {contacts[0].PhoneNumber}");
+        return;
+      }
+      if (contacts.Count() > 1)
+      {
+        Console.WriteLine("Найдены абоненты:");
+        foreach(var item in contacts) 
+        {
+          Console.WriteLine($"Имя: {item.Name} Телефон: {item.PhoneNumber}");
+        }
       }
       else
       {

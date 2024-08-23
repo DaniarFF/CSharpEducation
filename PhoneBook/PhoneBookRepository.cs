@@ -1,14 +1,14 @@
-﻿using System.Text.Json;
-using PhoneBook.Interfaces;
+﻿using PhoneBook.Interfaces;
 using PhoneBook.Models;
 using PhoneBook.Settings;
+using System.Text.Json;
 
 namespace PhoneBook
 {
-    /// <summary>
-    /// Репозиторий телефонной книги
-    /// </summary>
-    public class PhoneBookRepository : IPhoneBookRepository
+  /// <summary>
+  /// Репозиторий телефонной книги
+  /// </summary>
+  public class PhoneBookRepository : IPhoneBookRepository
   {
     #region Поля и свойства
 
@@ -18,7 +18,7 @@ namespace PhoneBook
 
     #region Вложенные типы
 
-    JsonSerializerOptions options = new JsonSerializerOptions()
+    private JsonSerializerOptions options = new JsonSerializerOptions()
     {
       PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
       WriteIndented = true,
@@ -28,79 +28,51 @@ namespace PhoneBook
 
     #region Методы
 
-    public async Task<List<Abonent>> GetAll()
+    public IEnumerable<Contact> GetAll()
     {
       using FileStream fs = new FileStream(filePath, FileMode.OpenOrCreate);
-      List<Abonent> abonents = await JsonSerializer.DeserializeAsync<List<Abonent>>(fs, options);
-      return abonents;
+      List<Contact> contacts = JsonSerializer.Deserialize<List<Contact>>(fs, options);
+      return contacts;
     }
 
-    public async Task Add(string name, string number)
-    {
-      List<Abonent> abonents = await GetAll();
-
-      name = CapitalizeFirstLetter(name);
-
-      Abonent newAbonent = new Abonent()
-      {
-        Name = name,
-        PhoneNumber = number,
-      };
-
-      Abonent abonent = await FindByName(name);
-      if (abonent == null)
-      {
-        abonents.Add(newAbonent);
-      }
-      else
-      {
-        throw new InvalidOperationException("Абонент уже существует");
-      }
-
-      using FileStream fs = new FileStream(filePath, FileMode.Create);
-      await JsonSerializer.SerializeAsync(fs, abonents, options);
-    }
-
-    public async Task Delete(string name)
+    public async Task Add(Contact contact)
     {
       try
       {
-        List<Abonent> abonents = await GetAll();
+        List<Contact> contacts = GetAll().ToList();
+        contacts.Add(contact);
 
-        name = CapitalizeFirstLetter(name);
-
-        var itemToDelete = abonents.FirstOrDefault(s => s.Name == name);
-        if (itemToDelete != null)
-        {
-          abonents.Remove(itemToDelete);
-
-          using FileStream fs = new FileStream(filePath, FileMode.Create);
-          await JsonSerializer.SerializeAsync(fs, abonents, options);
-        }
+        using FileStream fs = new FileStream(filePath, FileMode.Create);
+        JsonSerializer.Serialize(fs, contacts, options);
       }
-      catch (Exception ex)
+      catch (Exception)
       {
-        throw new Exception("Ошибка удаления");
+        throw;
       }
     }
 
-    public async Task<Abonent> FindByName(string name)
+    public async Task Delete(Contact contact)
     {
-      name = CapitalizeFirstLetter(name);
+      try
+      {
+        List<Contact> contacts = GetAll().ToList();
 
-      List<Abonent> abonents = await GetAll();
-      return abonents.FirstOrDefault(s => s.Name == name);
-    }
+        foreach (var item in contacts)
+        {
+          if (item.PhoneNumber == contact.PhoneNumber)
+          {
+            contact = item;
+          }
+        }
+        contacts.Remove(contact);
 
-    public async Task<Abonent> FindByNumber(string number)
-    {
-      List<Abonent> abonents = await GetAll();
-      return abonents.FirstOrDefault(s => s.PhoneNumber == number);
-    }
-
-    public string CapitalizeFirstLetter(string str)
-    {
-      return str.Substring(0, 1).ToUpper() + str.Substring(1);
+        using FileStream fs = new FileStream(filePath, FileMode.Create);
+        await JsonSerializer.SerializeAsync(fs, contacts, options);
+      }
+      catch (Exception)
+      {
+        throw;
+      }
     }
 
     #endregion
