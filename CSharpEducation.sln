@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HomeWork2.TicTacToe", "Home
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HomeWork3.PhoneBook", "HomeWork3.PhoneBook", "{5AF2AFF1-7ACA-445B-AF5C-2C1994D34861}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhoneBook", "PhoneBook\PhoneBook.csproj", "{3C6F33BC-A209-4011-AA5C-B10850F47FAC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhoneBook", "PhoneBook\PhoneBook.csproj", "{3C6F33BC-A209-4011-AA5C-B10850F47FAC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HomeWork2.TicTacToe", "HomeWork2.TicTacToe", "{C98DFF16-7E10-4BC9-AA38-F65E6C967E32}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,6 +36,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{92AB39DC-DC47-422B-B088-1D2F32FD57A8} = {C98DFF16-7E10-4BC9-AA38-F65E6C967E32}
 		{3C6F33BC-A209-4011-AA5C-B10850F47FAC} = {5AF2AFF1-7ACA-445B-AF5C-2C1994D34861}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

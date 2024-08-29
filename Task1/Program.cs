@@ -1,4 +1,6 @@
-﻿namespace Task1
+﻿using System.Threading.Channels;
+
+namespace Task1
 {
     internal class Program
     {
@@ -6,5 +8,6 @@
         {
             Console.WriteLine("Hello, World!");
         }
+        
     }
 }
