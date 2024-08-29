@@ -12,7 +12,7 @@ namespace PhoneBook
   {
     static async Task Main(string[] args)
     {
-      var cfg = new ConfigurationBuilder().AddJsonFile("config.json").Build();
+      var cfg = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
       var settings = cfg.GetSection("App").Get<ApplicationSettings>();
 
       IServiceCollection services = new ServiceCollection();
@@ -52,6 +52,7 @@ namespace PhoneBook
       }
     }
 
+    #region Методы
     private static async Task GetAllAbonents(IPhoneBookService phoneBookService)
     {
       try
@@ -83,21 +84,21 @@ namespace PhoneBook
         {
           Console.WriteLine($"Абонент {name} добавлен");
         }
-        else 
+        else
         {
           Console.WriteLine($"Контакт уже существует:\nИмя: {existingContact.Name} Телефон: {existingContact.PhoneNumber}");
         }
       }
       catch (Exception ex)
       {
-        if (ex is ContactAlreadyExistsException or InvalidPhoneNumberFormatException)
+        if (ex is ValidationException)
         {
           Console.WriteLine(ex.Message);
         }
-        else 
+        else
         {
           Console.WriteLine("Ошибка добавления");
-        }         
+        }
       }
     }
 
@@ -108,7 +109,7 @@ namespace PhoneBook
 
       try
       {
-        await phoneBookService.DeleteContact(number); 
+        await phoneBookService.DeleteContact(number);
       }
       catch (Exception)
       {
@@ -125,7 +126,7 @@ namespace PhoneBook
       string name = Console.ReadLine();
 
       var contacts = phoneBookService.FindContact(name).ToList();
-      if(contacts.Count() == 1) 
+      if (contacts.Count() == 1)
       {
         Console.WriteLine($"Имя: {contacts[0].Name} Телефон: {contacts[0].PhoneNumber}");
         return;
@@ -133,7 +134,7 @@ namespace PhoneBook
       if (contacts.Count() > 1)
       {
         Console.WriteLine("Найдены абоненты:");
-        foreach(var item in contacts) 
+        foreach (var item in contacts)
         {
           Console.WriteLine($"Имя: {item.Name} Телефон: {item.PhoneNumber}");
         }
@@ -142,6 +143,7 @@ namespace PhoneBook
       {
         Console.WriteLine("Абонент не найден");
       }
-    }
+    } 
+    #endregion
   }
 }

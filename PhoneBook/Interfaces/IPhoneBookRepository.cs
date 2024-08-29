@@ -22,7 +22,7 @@ namespace PhoneBook.Interfaces
     /// <param name="name"> Имя абонента </param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    Task Delete(Contact contact);
+    Task Delete(string number);
 
     /// <summary>
     /// Получить всех абонентов с телефонной книги

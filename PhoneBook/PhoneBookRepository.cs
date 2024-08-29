@@ -14,10 +14,6 @@ namespace PhoneBook
 
     private readonly string filePath;
 
-    #endregion
-
-    #region Вложенные типы
-
     private JsonSerializerOptions options = new JsonSerializerOptions()
     {
       PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -51,28 +47,23 @@ namespace PhoneBook
       }
     }
 
-    public async Task Delete(Contact contact)
+    public async Task Delete(string number)
     {
-      try
-      {
-        List<Contact> contacts = GetAll().ToList();
+      List<Contact> contacts = GetAll().ToList();
 
-        foreach (var item in contacts)
+      Contact contactToDelete = new Contact();
+
+      foreach (var item in contacts)
+      {
+        if (item.PhoneNumber == number)
         {
-          if (item.PhoneNumber == contact.PhoneNumber)
-          {
-            contact = item;
-          }
+          contactToDelete = item;
         }
-        contacts.Remove(contact);
+      }
+      contacts.Remove(contactToDelete);
 
-        using FileStream fs = new FileStream(filePath, FileMode.Create);
-        await JsonSerializer.SerializeAsync(fs, contacts, options);
-      }
-      catch (Exception)
-      {
-        throw;
-      }
+      using FileStream fs = new FileStream(filePath, FileMode.Create);
+      await JsonSerializer.SerializeAsync(fs, contacts, options);
     }
 
     #endregion

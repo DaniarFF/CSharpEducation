@@ -1,17 +1,15 @@
-﻿using System.Text.RegularExpressions;
-using System.Xml.Linq;
-using PhoneBook.Exceptions;
+﻿using PhoneBook.Exceptions;
 using PhoneBook.Interfaces;
 using PhoneBook.Models;
 using PhoneBook.Settings;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Text.RegularExpressions;
 
 namespace PhoneBook
 {
-    /// <summary>
-    /// Сервис для работы с телефонной книгой
-    /// </summary>
-    public class PhoneBookService : IPhoneBookService
+  /// <summary>
+  /// Сервис для работы с телефонной книгой
+  /// </summary>
+  public class PhoneBookService : IPhoneBookService
   {
     #region Поля и свойства
 
@@ -27,8 +25,6 @@ namespace PhoneBook
 
     public async Task<Contact> AddNewContact(string name, string number)
     {
-      Regex regex = new Regex(@"^\+7\d{10}$");
-
       List<Contact> contacts = (phoneBookRepository.GetAll()).ToList();
 
       foreach (var contact in contacts)
@@ -45,14 +41,16 @@ namespace PhoneBook
         PhoneNumber = number
       };
 
+      Regex regex = new Regex(@"^\+7\d{10}$");
+
       if (regex.IsMatch(number))
       {
         await phoneBookRepository.Add(contactToAdd);
-        return default;
+        return null;
       }
       else
       {
-        throw new InvalidPhoneNumberFormatException("Неправильный формат телефона, должен быть в формате +79998887766");
+        throw new ValidationException("Неправильный формат телефона, должен быть в формате +79998887766");
       }
     }
 
@@ -60,11 +58,13 @@ namespace PhoneBook
     {
       List<Contact> contacts = (phoneBookRepository.GetAll()).ToList();
       Contact contactToDelete = contacts.FirstOrDefault(p => p.PhoneNumber == number);
-      if (contactToDelete == null) 
-      { 
-        throw new ContactDoesntExistException("Контакта с таким номером не существует");
-      }   
-      await phoneBookRepository.Delete(contactToDelete);
+
+      if (contactToDelete == null)
+      {
+        throw new ValidationException("Контакта с таким номером не существует");
+      }
+
+      await phoneBookRepository.Delete(contactToDelete.PhoneNumber);
     }
 
     public IEnumerable<Contact> FindContact(string searchString)
@@ -82,6 +82,7 @@ namespace PhoneBook
         return contacts.FindAll(s => s.Name.ToUpper() == searchString.ToUpper());
       }
     }
+
     #endregion
 
     #region Констукторы
